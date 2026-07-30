@@ -13,4 +13,9 @@ struct SajdaApp: App {
         }
         .menuBarExtraStyle(.window)
     }
+
+    init() {
+        // Keep the menu bar item after reboot without opening the app by hand.
+        LaunchAtLogin.enableOnFirstLaunchIfNeeded()
+    }
 }

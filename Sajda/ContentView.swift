@@ -1,3 +1,4 @@
+import AppKit
 import CoreLocation
 import SwiftUI
 
@@ -51,7 +52,7 @@ struct ContentView: View {
             prayerList(schedule, nextPrayer: nextPrayer)
                 .padding(.top, 10)
 
-            footerLabel(schedule)
+            footerSection(schedule)
                 .padding(.top, 12)
         }
         .padding(.horizontal, 16)
@@ -201,12 +202,44 @@ struct ContentView: View {
         }
     }
 
-    private func footerLabel(_ schedule: PrayerSchedule) -> some View {
-        Text("All times are local")
-            .font(.system(size: 10, weight: .medium))
-            .foregroundStyle(.white.opacity(0.40))
-            .frame(maxWidth: .infinity)
-            .help("\(schedule.calculationMethod), \(schedule.timezoneIdentifier)")
+    private func footerSection(_ schedule: PrayerSchedule) -> some View {
+        VStack(spacing: 10) {
+            Toggle(isOn: launchAtLoginBinding) {
+                Text("Open at Login")
+                    .font(.system(size: 12, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.78))
+            }
+            .toggleStyle(.switch)
+            .controlSize(.mini)
+            .help("Start Sajda automatically so it stays in the menu bar after restart.")
+
+            HStack {
+                Text("All times are local")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundStyle(.white.opacity(0.40))
+                    .help("\(schedule.calculationMethod), \(schedule.timezoneIdentifier)")
+
+                Spacer()
+
+                Button("Quit") {
+                    NSApplication.shared.terminate(nil)
+                }
+                .buttonStyle(.plain)
+                .font(.system(size: 10, weight: .medium))
+                .foregroundStyle(.white.opacity(0.45))
+            }
+        }
+    }
+
+    private var launchAtLoginBinding: Binding<Bool> {
+        Binding(
+            get: { LaunchAtLogin.isEnabled },
+            set: { newValue in
+                _ = LaunchAtLogin.setEnabled(newValue)
+                // Force a view refresh after SMAppService changes.
+                viewModel.objectWillChange.send()
+            }
+        )
     }
 
     // MARK: Loading / error

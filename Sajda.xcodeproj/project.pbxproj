@@ -9,6 +9,7 @@
 /* Begin PBXBuildFile section */
 		2A0000010000000000000001 /* SajdaApp.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A0000010000000000000101 /* SajdaApp.swift */; };
 		2A0000010000000000000002 /* ContentView.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A0000010000000000000102 /* ContentView.swift */; };
+		2A0000010000000000000B01 /* LaunchAtLogin.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A0000010000000000000120 /* LaunchAtLogin.swift */; };
 		2A0000010000000000000003 /* PrayerTimes.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A0000010000000000000103 /* PrayerTimes.swift */; };
 		2A0000010000000000000004 /* Assets.xcassets in Resources */ = {isa = PBXBuildFile; fileRef = 2A0000010000000000000104 /* Assets.xcassets */; };
 		2A0000010000000000000005 /* SajdaWidget.swift in Sources */ = {isa = PBXBuildFile; fileRef = 2A0000010000000000000105 /* SajdaWidget.swift */; };
@@ -46,6 +47,7 @@
 /* Begin PBXFileReference section */
 		2A0000010000000000000101 /* SajdaApp.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = SajdaApp.swift; sourceTree = "<group>"; };
 		2A0000010000000000000102 /* ContentView.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = ContentView.swift; sourceTree = "<group>"; };
+		2A0000010000000000000120 /* LaunchAtLogin.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = LaunchAtLogin.swift; sourceTree = "<group>"; };
 		2A0000010000000000000103 /* PrayerTimes.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = PrayerTimes.swift; sourceTree = "<group>"; };
 		2A0000010000000000000110 /* GlassPanel.swift */ = {isa = PBXFileReference; lastKnownFileType = sourcecode.swift; path = GlassPanel.swift; sourceTree = "<group>"; };
 		2A0000010000000000000104 /* Assets.xcassets */ = {isa = PBXFileReference; lastKnownFileType = folder.assetcatalog; path = Assets.xcassets; sourceTree = "<group>"; };
@@ -89,6 +91,7 @@
 			children = (
 				2A0000010000000000000101 /* SajdaApp.swift */,
 				2A0000010000000000000102 /* ContentView.swift */,
+				2A0000010000000000000120 /* LaunchAtLogin.swift */,
 				2A0000010000000000000104 /* Assets.xcassets */,
 			);
 			path = Sajda;
@@ -225,6 +228,7 @@
 			files = (
 				2A0000010000000000000001 /* SajdaApp.swift in Sources */,
 				2A0000010000000000000002 /* ContentView.swift in Sources */,
+				2A0000010000000000000B01 /* LaunchAtLogin.swift in Sources */,
 				2A0000010000000000000003 /* PrayerTimes.swift in Sources */,
 				2A0000010000000000000A01 /* GlassPanel.swift in Sources */,
 			);
