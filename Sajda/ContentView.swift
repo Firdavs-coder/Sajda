@@ -1,6 +1,7 @@
 import AppKit
 import CoreLocation
 import SwiftUI
+import UserNotifications
 
 struct ContentView: View {
     @ObservedObject var viewModel: PrayerTimesViewModel
@@ -326,11 +327,12 @@ final class PrayerTimesViewModel: NSObject, ObservableObject {
     }
 
     var menuBarTitle: String {
-        guard let nextPrayer = schedule?.nextPrayer(after: now) else {
+        // Show the prayer that is currently active, not the upcoming one.
+        guard let current = schedule?.previousPrayer(before: now) else {
             return isLoading ? "Sajda" : "Prayer Times"
         }
 
-        return "\(nextPrayer.name.rawValue) \(nextPrayer.time)"
+        return "\(current.name.rawValue) \(current.time)"
     }
 
     var locationSubtitle: String {
@@ -354,28 +356,59 @@ final class PrayerTimesViewModel: NSObject, ObservableObject {
         errorMessage = nil
         usedApproximateLocation = false
 
+        // Fast path: we have a cached location — show prayer times instantly,
+        // then silently verify the device hasn't moved in the background.
+        if !force, let cached = LocationCache.cached {
+            do {
+                let fetched = try await PrayerTimesService.fetchSchedule(
+                    latitude: cached.lat,
+                    longitude: cached.lon,
+                    locationName: cached.name
+                )
+                schedule = fetched
+                isLoading = false
+                scheduleNotifications(for: fetched)
+                requestNotificationPermission()
+                Task { await refreshLocationIfMoved(cachedLat: cached.lat, cachedLon: cached.lon) }
+                return
+            } catch {
+                // API failed with cached coords — fall through to live location.
+            }
+        }
+
+        // Slow path: request a live location.
         do {
             let location = try await requestLocation()
             let locationName = await reverseGeocodedName(for: location)
-            schedule = try await PrayerTimesService.fetchSchedule(
+            LocationCache.save(
+                lat: location.coordinate.latitude,
+                lon: location.coordinate.longitude,
+                name: locationName
+            )
+            let fetched = try await PrayerTimesService.fetchSchedule(
                 latitude: location.coordinate.latitude,
                 longitude: location.coordinate.longitude,
                 locationName: locationName
             )
+            schedule = fetched
+            scheduleNotifications(for: fetched)
         } catch {
             do {
                 let approximateLocation = try await ApproximateLocationService.fetch()
                 usedApproximateLocation = true
-                schedule = try await PrayerTimesService.fetchSchedule(
+                let fetched = try await PrayerTimesService.fetchSchedule(
                     latitude: approximateLocation.latitude,
                     longitude: approximateLocation.longitude,
                     locationName: approximateLocation.displayName
                 )
+                schedule = fetched
+                scheduleNotifications(for: fetched)
             } catch {
                 errorMessage = error.localizedDescription
             }
         }
 
+        requestNotificationPermission()
         isLoading = false
     }
 
@@ -446,6 +479,68 @@ final class PrayerTimesViewModel: NSObject, ObservableObject {
         }
     }
 
+    /// Re-fetches the schedule only when the device has moved more than 5 km.
+    private func refreshLocationIfMoved(cachedLat: Double, cachedLon: Double) async {
+        guard let freshLocation = try? await requestLocation() else { return }
+
+        let cached = CLLocation(latitude: cachedLat, longitude: cachedLon)
+        guard freshLocation.distance(from: cached) > 5_000 else { return }
+
+        let locationName = await reverseGeocodedName(for: freshLocation)
+        LocationCache.save(
+            lat: freshLocation.coordinate.latitude,
+            lon: freshLocation.coordinate.longitude,
+            name: locationName
+        )
+
+        do {
+            let updated = try await PrayerTimesService.fetchSchedule(
+                latitude: freshLocation.coordinate.latitude,
+                longitude: freshLocation.coordinate.longitude,
+                locationName: locationName
+            )
+            schedule = updated
+            scheduleNotifications(for: updated)
+        } catch {}
+    }
+
+    /// Schedules a local notification for every upcoming prayer today (Sunrise excluded).
+    private func scheduleNotifications(for schedule: PrayerSchedule) {
+        let center = UNUserNotificationCenter.current()
+        let now = Date()
+
+        // Replace any previously scheduled notifications for this app.
+        center.removePendingNotificationRequests(
+            withIdentifiers: PrayerName.allCases.map { "sajda.\($0.rawValue)" }
+        )
+
+        for prayer in schedule.prayers {
+            guard prayer.name != .sunrise, prayer.date > now else { continue }
+
+            let content = UNMutableNotificationContent()
+            content.title = prayer.name.rawValue
+            content.body  = "Prayer time – \(prayer.time)"
+            content.sound = .default
+
+            let comps = Calendar.current.dateComponents(
+                [.year, .month, .day, .hour, .minute],
+                from: prayer.date
+            )
+            let trigger = UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)
+            let request = UNNotificationRequest(
+                identifier: "sajda.\(prayer.name.rawValue)",
+                content: content,
+                trigger: trigger
+            )
+            center.add(request)
+        }
+    }
+
+    private func requestNotificationPermission() {
+        UNUserNotificationCenter.current()
+            .requestAuthorization(options: [.alert, .sound]) { _, _ in }
+    }
+
     private func resumeLocationContinuation(with result: Result<CLLocation, Error>) {
         guard let continuation = locationContinuation else {
             return
@@ -510,6 +605,32 @@ enum PrayerLocationError: LocalizedError {
         case .locationUnavailable:
             "Your current location could not be determined."
         }
+    }
+}
+
+// MARK: - Location cache
+
+private enum LocationCache {
+    private static let latKey  = "sajda.cachedLatitude"
+    private static let lonKey  = "sajda.cachedLongitude"
+    private static let nameKey = "sajda.cachedLocationName"
+
+    /// Returns the previously saved coordinates and place name, or nil on first launch.
+    static var cached: (lat: Double, lon: Double, name: String)? {
+        let d = UserDefaults.standard
+        guard d.object(forKey: latKey) != nil else { return nil }
+        return (
+            lat:  d.double(forKey: latKey),
+            lon:  d.double(forKey: lonKey),
+            name: d.string(forKey: nameKey) ?? "Current Location"
+        )
+    }
+
+    static func save(lat: Double, lon: Double, name: String) {
+        let d = UserDefaults.standard
+        d.set(lat,  forKey: latKey)
+        d.set(lon,  forKey: lonKey)
+        d.set(name, forKey: nameKey)
     }
 }
 

@@ -4,16 +4,19 @@
 
 A lightweight macOS menu bar app for Islamic prayer times.
 
-Sajda lives in your menu bar and shows the next prayer at a glance. Click it for today’s full schedule, countdown, and location — with optional desktop widgets.
+Sajda lives in your menu bar and shows the current prayer at a glance. Click it for today's full schedule, countdown ring, and location — with optional desktop widgets.
 
 ## Features
 
-- **Menu bar countdown** — next prayer name and time, always visible
+- **Menu bar** — current active prayer name and time, always visible
 - **Daily schedule** — Fajr, Sunrise, Dhuhr, Asr, Maghrib, Isha
-- **Location-based times** — uses your location (falls back to London)
+- **Countdown ring** — time remaining until the next prayer
+- **Location caching** — remembers your location; only re-fetches if you move more than 5 km
+- **Prayer notifications** — system notification at each prayer time
 - **Hijri & Gregorian dates**
-- **Desktop widgets** — small, medium, and large
+- **Desktop widgets** — small, medium, and large sizes
 - **Launch at login** — reappears after reboot
+- **IP fallback** — approximates location via IP when GPS is unavailable
 
 ## Requirements
 
@@ -22,11 +25,13 @@ Sajda lives in your menu bar and shows the next prayer at a glance. Click it for
 
 ## Install
 
-### From DMG
+### Download (easiest)
 
-1. Open `dist/Sajda.dmg` (or build one with the script below)
-2. Drag **Sajda** into **Applications**
-3. Open the app — it appears in the menu bar
+1. Go to [Releases](https://github.com/Firdavs-coder/Sajda/releases/latest) and download `Sajda.dmg`
+2. Open the DMG and drag **Sajda** into **Applications**
+3. Launch the app — it appears in the menu bar
+
+> **First launch:** macOS may show a security prompt. Open **System Settings → Privacy & Security** and click **Open Anyway**.
 
 ### Build from source
 
@@ -46,14 +51,15 @@ Output: `dist/Sajda.dmg`
 
 ## Usage
 
-1. Launch **Sajda** — a prayer label appears in the menu bar
-2. Click it for the full day panel and countdown ring
-3. Allow **Location** when prompted for local times
-4. Add a **Sajda** widget from the macOS widget gallery (optional)
+1. Launch **Sajda** — the current prayer appears in the menu bar
+2. Click it for the full day panel with countdown ring
+3. Allow **Location** when prompted (saved for future launches)
+4. Allow **Notifications** to receive an alert at each prayer time
+5. Add a **Sajda** widget from the macOS widget gallery (optional)
 
 ## Privacy
 
-Prayer times are fetched from the [Aladhan API](https://aladhan.com/prayer-times-api). Location is used only to request times for your area; nothing is stored on a Sajda server.
+Prayer times are fetched from the [Aladhan API](https://aladhan.com/prayer-times-api). Your location coordinates are stored locally on your device only (in `UserDefaults`) and are never sent to any Sajda server. Location is used solely to request prayer times for your area.
 
 ## License
 
