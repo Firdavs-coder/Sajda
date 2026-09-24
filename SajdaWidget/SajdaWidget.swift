@@ -48,15 +48,39 @@ struct SajdaWidgetView: View {
             }
         }
         .containerBackground(for: .widget) {
-            LinearGradient(
-                colors: [
-                    Color(red: 0.05, green: 0.08, blue: 0.10),
-                    Color(red: 0.04, green: 0.22, blue: 0.20),
-                    Color(red: 0.24, green: 0.18, blue: 0.08)
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
+            ZStack {
+                Color(red: 0.05, green: 0.08, blue: 0.12)
+
+                GeometryReader { geometry in
+                    ZStack {
+                        Circle()
+                            .fill(Color.teal.opacity(0.8))
+                            .frame(width: geometry.size.width * 0.9)
+                            .offset(x: -geometry.size.width * 0.2, y: -geometry.size.height * 0.3)
+                            .blur(radius: 40)
+
+                        Circle()
+                            .fill(Color.indigo.opacity(0.7))
+                            .frame(width: geometry.size.width * 0.9)
+                            .offset(x: geometry.size.width * 0.3, y: geometry.size.height * 0.4)
+                            .blur(radius: 50)
+                    }
+                }
+
+                Rectangle()
+                    .fill(.ultraThinMaterial)
+            }
+            .overlay {
+                ContainerRelativeShape()
+                    .stroke(
+                        LinearGradient(
+                            colors: [.white.opacity(0.4), .clear, .white.opacity(0.1)],
+                            startPoint: .topLeading,
+                            endPoint: .bottomTrailing
+                        ),
+                        lineWidth: 1.5
+                    )
+            }
         }
     }
 
